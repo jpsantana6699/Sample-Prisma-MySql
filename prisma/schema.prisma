@@ -14,10 +14,65 @@ datasource db {
 }
 
 model Usuario {
-  id     Int     @id @default(autoincrement())
-  nome   String
-  email  String  @unique
-  ativo  Boolean @default(true)
+  id        Int       @id @default(autoincrement())
+  nome      String
+  email     String    @unique
+  ativo     Boolean   @default(true)
+  deletedAt DateTime?
+  
+  // Relação um-para-um com Role
+  role      Role?     @relation(fields: [roleId], references: [id])
+  roleId    Int?      @unique
 
   @@map("usuarios")
+}
+
+model Role {
+  id          Int             @id @default(autoincrement())
+  nome        String          @unique
+  descricao   String?
+  deletedAt   DateTime?
+  
+  // Relação um-para-um com Usuario
+  usuario     Usuario?
+  
+  // Relação muitos-para-muitos com Permission através de RolePermission
+  permissions RolePermission[]
+  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          Int             @id @default(autoincrement())
+  nome        String          @unique
+  descricao   String?
+  deletedAt   DateTime?
+  
+  // Relação muitos-para-muitos com Role através de RolePermission
+  roles       RolePermission[]
+  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  deletedAt    DateTime?
+  
+  // Relações muitos-para-um com Role e Permission
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId       Int
+  
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId Int
+  
+  createdAt    DateTime   @default(now())
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
 }
